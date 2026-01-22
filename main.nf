@@ -425,7 +425,4 @@ workflow {
             meta, tsv -> tsv
         }.collect()
     )
-
-    // TODO: check pipeline is robust to empty chromosomes (eg
-    // chromosome Y on female sample)
 }

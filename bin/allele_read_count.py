@@ -106,7 +106,11 @@ def assign_reads(
     for record in vcf:
         sub = loci_assign_reads(bam,genome,record.chrom,record.pos,record.ref,record.alts,flank)
         result.append(sub)
-    result = pd.concat(result, ignore_index=True)
+
+    if result:
+        result = pd.concat(result, ignore_index=True)
+    else:
+        result = pd.DataFrame([], columns=["qname", "allele"])
 
     return result
 
@@ -155,7 +159,7 @@ def main():
 
     counts = assignments_to_counts(df_assignments)
 
-    if args.sample_name:
+    if counts.shape[0] > 0 and args.sample_name:
         counts['cell'] = args.sample_name + "_" + counts['cell']
 
     counts.to_csv(
