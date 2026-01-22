@@ -144,6 +144,7 @@ def main():
     parser.add_argument("--genome_fasta", required=True, help="Reference fasta.")
     parser.add_argument("--variants_vcf", required=True, help="VCF used for variant positions and alleles.")
     parser.add_argument("--out_count_path", required=True, help="Output csv path.")
+    parser.add_argument("--sample_name", required=False, default="", help="Add sample name as prefix to cell barcode")
     args = parser.parse_args()
 
     df_assignments = assign_reads(
@@ -153,6 +154,9 @@ def main():
     )
 
     counts = assignments_to_counts(df_assignments)
+
+    if args.sample_name:
+        counts['cell'] = args.sample_name + "_" + counts['cell']
 
     counts.to_csv(
         args.out_count_path,
