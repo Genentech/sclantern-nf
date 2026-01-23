@@ -208,6 +208,7 @@ process flag_correction {
 process trgt {
     label "veryParallel"
     label "highMem"
+    label "longJob"
     
     input:
     tuple(val(chrom),
