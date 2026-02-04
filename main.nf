@@ -132,9 +132,8 @@ process run_minimap {
         --secondary=no \
         $ref_fa \
         $in_fq \
-        > tmp.sam
-
-    samtools view -bSh -F 2308 tmp.sam > ${in_fq.baseName}.remapped.bam
+        | samtools view -bSh -F 2308 \
+        > ${in_fq.baseName}.remapped.bam
     """
 }
 
