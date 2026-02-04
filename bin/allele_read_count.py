@@ -28,7 +28,7 @@ def sub_reads(read,start,end):
         if pos > end:
             break
     vec = np.array(vec)
-    if(np.max(vec) < end):
+    if (len(vec) == 0) or (np.max(vec) < end):
         return(None)
     indices = np.where((vec >= start) & (vec <= end))[0]
     
