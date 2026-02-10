@@ -64,7 +64,8 @@ def loci_assign_reads(bam, fasta, chrom,pos,ref,alts,flank = 0):
     alted_ref = ref_to_alt(alted_ref,ref,alts,flank)
 
     # result = pd.DataFrame({'cell': [], 'UMI': [], "allele":[]})
-    result = pd.DataFrame({'qname': [], "allele":[],"score":[]})
+    #result = pd.DataFrame({'qname': [], "allele":[],"score":[]})
+    result = []
     aligner = aligner_init()
     for read in bam.fetch(chrom, pos-flank-1, pos+len(ref)+flank-1):
         subseq = sub_reads(read,pos-flank-1, pos+len(ref)+flank-1)
@@ -86,8 +87,9 @@ def loci_assign_reads(bam, fasta, chrom,pos,ref,alts,flank = 0):
             id = np.where(np.array(scores)==max(scores))[0][0]
             # new_row = {'cell': read.get_tag("CB"), 'UMI': read.get_tag("XM"),"allele":alts[id]}
             new_row = {'qname': read.qname,"allele":alted_ref[id],"score":max(scores)}
-            result = result._append(new_row, ignore_index=True)
+            result.append(new_row)
     # result = result.groupby(["cell","UMI","allele"]).size().reset_index(name='count')
+    result = pd.DataFrame(result, columns=["qname", "allele", "score"])
     result["chrom"] = chrom
     result["pos"] = pos 
     return(result)
