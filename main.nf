@@ -51,11 +51,12 @@ process bam_to_fq {
     tuple(val(meta), path(in_bam))
 
     output:
-    tuple(val(meta), path("${in_bam.baseName}.fq"))
+    tuple(val(meta), path("${in_bam.baseName}.fq.gz"))
 
     script:
     """
     samtools bam2fq $in_bam > ${in_bam.baseName}.fq
+    gzip ${in_bam.baseName}.fq
     """
 }
 
