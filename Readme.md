@@ -51,9 +51,3 @@ sample_name,path
 cells,/gstore/data/omni/biostat/lineage_tracing/hct116_cells_scisoseq_test.bam
 nuclei,/gstore/data/omni/biostat/lineage_tracing/hct116_nuclei_scisoseq_test.bam
 ```
-
-# Caveats
-
-I only tested it on very small example so far. May need to adjust the resources (cpu/memory) on more realistic examples.
-
-Planning to split by chromosome to make it more scalable.
