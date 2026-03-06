@@ -205,6 +205,30 @@ process flag_correction {
     """
 }
 
+process samtools_merge_flag_correction {
+    label "lowMem"
+    label "parallel"
+
+    publishDir params.outdir, mode: 'copy'
+
+    input:
+    tuple(val(sample),
+          path(bam_files),
+          path(bai_files))
+
+    output:
+    path("${sample}.flag_corrected.bam")
+    path("${sample}.flag_corrected.bam.bai")
+         
+    
+    script:
+    """
+    samtools merge -@ $task.cpus -o tmp.bam ${bam_files}
+    samtools sort -@ $task.cpus -o ${sample}.flag_corrected.bam tmp.bam
+    samtools index -@ $task.cpus ${sample}.flag_corrected.bam
+    """
+}
+
 process trgt {
     label "veryParallel"
     label "highMem"
@@ -328,6 +352,23 @@ workflow {
     )
 
     flag_correction(gatk_ncigar.out)
+
+    flag_correction_bam = flag_correction.out.map{
+        meta, bam, bai ->
+        tuple(meta.sample, bam)
+    }.groupTuple()
+
+    flag_correction_bai = flag_correction.out.map{
+        meta, bam, bai ->
+        tuple(meta.sample, bai)
+    }.groupTuple()
+
+    samtools_merge_flag_correction(
+        flag_correction_bam.combine(
+            flag_correction_bai,
+            by: 0
+        )
+    )
 
     split_bed(params.repeats_bed, chroms)
 

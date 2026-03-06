@@ -41,7 +41,7 @@ process count_read_alleles {
 }
 
 process rbind_allele_read_count {
-    label = "midMem"
+    label "midMem"
     publishDir params.outdir, mode: 'copy'
 
     input:
