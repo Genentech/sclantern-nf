@@ -239,88 +239,44 @@ process trgt {
     """
 }
 
-process filter_vcf {
-    label "lowMem"
+process deepv {
+    //NOTE memory usage grows with num threads
+    //label "veryParallel"
+    label "parallel"
+    label "highMem"
+    label "longJob"
 
-    input:
-    tuple(val(meta),
-          path(trgt_bam), path(trgt_bai),
-          path(trgt_vcf), path(trgt_csi))
-
-    output:
-    tuple(val(meta),
-          path("${trgt_vcf.baseName}.filtered.gz"),
-          path("${trgt_vcf.baseName}.filtered.gz.csi"))
-
-    script:
-    """
-    vcf_filter.py \
-        --in_vcf $trgt_vcf \
-        --out_vcf tmp.vcf \
-        --mode trgt
-
-    bcftools view tmp.vcf -Oz -o ${trgt_vcf.baseName}.filtered.gz
-    bcftools index ${trgt_vcf.baseName}.filtered.gz
-    """
-}
-
-// todo: should we use trgt merge instead of bcftools merge?
-process merge_vcf {
-    label "lowMem"
-
-    input:
-    tuple(val(chrom), path(vcf_files), path(csi_files))
-
-    output:
-    tuple(val(chrom),
-          path("${chrom}.merged.vcf.gz"),
-          path("${chrom}.merged.vcf.gz.csi"))
-
-    script:
-    """
-    bcftools merge -Oz -o ${chrom}.merged.vcf.gz $vcf_files
-    bcftools index ${chrom}.merged.vcf.gz
-    """
-}
-
-process count_read_alleles {
-    label "lowMem"
-
+    container "docker://google/deepvariant:1.10.0"
+    
     input:
     tuple(val(chrom),
-          val(meta), path(trgt_bam), path(trgt_bai),
+          val(meta), path(fc_bam), path(fc_bam_bai),
           path(ref_fa), path(ref_faidx), path(ref_dict),
-          path(variants_vcf), path(variants_csi))
+          path(repeats_bed))
 
     output:
-    tuple(val(meta), path("${meta.sample}.allele_read_count.${chrom}.tsv"))
+    tuple(val(meta),
+          path("${fc_bam.baseName}.deepv.vcf.gz"),
+          path("${fc_bam.baseName}.deepv.vcf.gz.tbi"))
 
     script:
     """
-    allele_read_count.py \
-        --bam_file $trgt_bam \
-        --genome_fasta $ref_fa \
-        --variants_vcf $variants_vcf \
+    /opt/deepvariant/bin/run_deepvariant \
+        --model_type PACBIO \
+        --ref "${ref_fa}" \
+        --reads "${fc_bam}" \
+        --output_vcf "${fc_bam.baseName}.deepv.vcf.gz" \
         --sample_name ${meta.sample} \
-        --out_count_path ${meta.sample}.allele_read_count.${chrom}.tsv
+        --num_shards "$task.cpus" # Use allocated cores for sharding
     """
 }
 
-process rbind_allele_read_count {
-    label = "midMem"
-    publishDir params.outdir, mode: 'copy'
+include { filter_vcf as filter_vcf_trgt } from './modules/filter_vcf.nf'
+include { filter_vcf as filter_vcf_deepv } from './modules/filter_vcf.nf'
 
-    input:
-    path(tsv_files)
+include {merge_and_count as merge_and_count_trgt} from "./workflows/merge_and_count.nf"
 
-    output:
-    path("combined_allele_read_count.tsv")
-
-    script:
-    """
-    rbind_df_tsvs.py combined_allele_read_count.tsv ${tsv_files}
-    """
-}
+include {merge_and_count as merge_and_count_deepv} from "./workflows/merge_and_count.nf"
 
 workflow {
     chroms = params.chroms.split(',').collect { "chr$it" }
@@ -388,42 +344,40 @@ workflow {
         )
     )
 
-    filter_vcf(trgt.out)
+    filter_vcf_trgt("trgt", trgt.out.map{
+        meta, bam, bai, vcf, csi ->
+        tuple(meta, vcf, csi)
+    })
 
-    grouped_vcf = filter_vcf.out.map{
-        meta, vcf, csi ->
-        tuple(meta.chrom, vcf)
-    }.groupTuple()
-
-    grouped_csi = filter_vcf.out.map{
-        meta, vcf, csi ->
-        tuple(meta.chrom, csi)
-    }.groupTuple()
-
-    //// TODO: skip this step if only 1 sample
-    merge_vcf(
-        grouped_vcf.combine(
-            grouped_csi,
-            by: 0
-        )
-    )
-
-    count_read_alleles(
+    merge_and_count_trgt(
+        filter_vcf_trgt.out,
         trgt.out.map{
             meta, bam, bai, vcf, csi ->
+            tuple(meta, bam, bai)
+        },
+        gatk_ref_dict.out,
+        "trgt"
+    )
+
+    deepv(
+        flag_correction.out.map{
+            meta, bam, bai ->
             tuple(meta.chrom, meta, bam, bai)
         }.combine(
             gatk_ref_dict.out,
             by: 0
         ).combine(
-            merge_vcf.out,
+            split_bed.out,
             by: 0
         )
     )
 
-    rbind_allele_read_count(
-        count_read_alleles.out.map{
-            meta, tsv -> tsv
-        }.collect()
+    filter_vcf_deepv("dv", deepv.out)
+
+    merge_and_count_deepv(
+        filter_vcf_deepv.out,
+        flag_correction.out,
+        gatk_ref_dict.out,
+        "deepv"
     )
 }
