@@ -225,6 +225,7 @@ process samtools_merge_flag_correction {
     """
     samtools merge -@ $task.cpus -o tmp.bam ${bam_files}
     samtools sort -@ $task.cpus -o ${sample}.flag_corrected.bam tmp.bam
+    rm tmp.bam
     samtools index -@ $task.cpus ${sample}.flag_corrected.bam
     """
 }
