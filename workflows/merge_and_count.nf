@@ -12,7 +12,7 @@ process merge_vcf {
 
     script:
     """
-    bcftools merge -Oz -o ${chrom}.merged.vcf.gz $vcf_files
+    bcftools merge --force-single -Oz -o ${chrom}.merged.vcf.gz $vcf_files
     bcftools index ${chrom}.merged.vcf.gz
     """
 }
