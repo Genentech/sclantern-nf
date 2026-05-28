@@ -75,7 +75,6 @@ workflow merge_and_count {
         tuple(meta.chrom, csi)
     }.groupTuple()
 
-    //// TODO: skip this step if only 1 sample
     merge_vcf(
         grouped_vcf.combine(
             grouped_csi,
