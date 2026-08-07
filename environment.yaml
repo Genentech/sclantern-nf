@@ -1,4 +1,4 @@
-name: scrnalltpre2
+name: sclantern-nf
 channels:
   - bioconda
   - conda-forge
@@ -187,4 +187,4 @@ dependencies:
   - yq=3.4.3=pyhe01879c_2
   - zstd=1.5.7=hb78ec9c_6
 
-prefix: "/gpfs/scratchfs01/site/u/kammj2/conda/envs/scrnalltpre2"
+prefix: "/gpfs/scratchfs01/site/u/kammj2/conda/envs/sclantern-nf"

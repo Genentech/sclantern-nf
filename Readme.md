@@ -8,8 +8,8 @@ conda create -f environment.yaml
 ```
 Alternatively, create the conda env manually:
 ```
-conda create -n scrnalltpre2
-conda activate scrnalltpre2
+conda create -n sclantern-nf
+conda activate sclantern-nf
 
 mamba install \
       python r \
@@ -31,7 +31,7 @@ Load modules and conda env
 ```
 ml Nextflow
 ml Micromamba
-conda activate scrnalltpre2
+conda activate sclantern-nf
 ```
 
 Run nextflow:
