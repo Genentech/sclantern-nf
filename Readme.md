@@ -45,3 +45,7 @@ sample_name,path
 sample1,/PATH/TO/SAMPLE1/scisoseq.bam
 sample2,/PATH/TO/SAMPLE2/scisoseq.bam
 ```
+
+# Additional links
+
+* [TRGT repeats file](https://zenodo.org/records/13178746) (used for `--repeats_bed`)
