@@ -3,7 +3,7 @@
 
 🚧 🛠️ 🏗️ 👷
 
-This repo provides the bioinformatics pipeline, implemented in Nextflow, for our forthcoming preprint. It converts BAM files from scisoseq into tables of allele counts in single cells, to be used for downstream lineage tracing. 
+This repo provides the bioinformatics pipeline, implemented in Nextflow, for our [preprint](https://www.biorxiv.org/content/10.64898/2026.08.25.747112v1). It converts BAM files from scisoseq into tables of allele counts in single cells, to be used for downstream lineage tracing. 
 
 # Prerequisites
 
